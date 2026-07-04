@@ -1,0 +1,21 @@
+name: dataset.gov.md
+description: dataset.gov.md CKAN open-data API live-verification for APIs.json cataloging.
+url: https://raw.githubusercontent.com/api-evangelist/dataset-gov-md/refs/heads/main/review.yml
+created: '2026-06-23'
+modified: '2026-06-23'
+reviews:
+  - date: '2026-06-23'
+    rating: 4
+    summary: >-
+      Moldova's national open-data catalog runs a stock CKAN 2.10.4 instance at dataset.gov.md
+      (site title "Portalul Datelor Deschise"). The package_search endpoint was probed and returned
+      a valid CKAN JSON response with a count of 1,275 datasets. The key cataloging detail is that
+      the machine-readable API lives on dataset.gov.md, not the date.gov.md landing portal, whose
+      /ckan/ and /api/3/ paths all return HTML 404.
+    endpoints:
+      - url: https://dataset.gov.md/api/3/action/package_search?rows=0
+        status: 200
+        note: Live CKAN response; count=1,275, CKAN 2.10.4.
+      - url: https://date.gov.md/
+        status: 200
+        note: Landing portal that links to the dataset.gov.md catalog.

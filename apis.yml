@@ -1,0 +1,58 @@
+aid: dataset-gov-md
+name: dataset.gov.md (Portalul Datelor Deschise)
+description: >-
+  dataset.gov.md is the national government open-data catalog for the Republic of Moldova (Portalul
+  Datelor Deschise). The landing portal at date.gov.md links out to this catalog, which runs CKAN 2.10.4
+  and exposes the standard CKAN Action API over approximately 1,275 datasets, supporting programmatic
+  dataset search, metadata retrieval, and resource access. No API key is required for read endpoints.
+kind: government
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+url: https://raw.githubusercontent.com/api-evangelist/dataset-gov-md/refs/heads/main/apis.yml
+tags:
+  - Open Data
+  - CKAN
+  - Data Catalog
+  - DCAT
+  - Government Data
+  - National Government
+  - Moldova
+  - Europe
+created: '2026-06-23'
+modified: '2026-06-23'
+specificationVersion: '0.19'
+apis:
+  - aid: dataset-gov-md:catalog
+    name: dataset.gov.md CKAN Action API
+    description: >-
+      CKAN Action API for dataset.gov.md, a consistent JSON-over-HTTP interface over a catalog of
+      roughly 1,275 datasets. Standard actions include package_search, package_show, package_list,
+      organization_list, group_list, and status_show. Base URL https://dataset.gov.md/api/3/action/.
+      Note the API lives on dataset.gov.md, not the date.gov.md landing portal.
+    humanURL: https://dataset.gov.md/ro/dataset
+    baseURL: https://dataset.gov.md/api/3/action
+    tags:
+      - CKAN
+      - Action API
+      - Open Data
+      - Catalog
+      - REST
+      - JSON
+    properties:
+      - type: Documentation
+        url: https://docs.ckan.org/en/2.10/api/
+      - type: Website
+        url: https://dataset.gov.md/
+      - type: x-api-endpoint
+        url: https://dataset.gov.md/api/3/action/package_search?rows=0
+      - type: x-landing-portal
+        url: https://date.gov.md
+common:
+  - type: Website
+    url: https://dataset.gov.md/
+  - type: Documentation
+    url: https://docs.ckan.org/en/2.10/api/
+  - type: Review
+    url: review.yml
+maintainers:
+  - FN: Ivan Melenciuc
+    email: melenciucivan03@gmail.com
