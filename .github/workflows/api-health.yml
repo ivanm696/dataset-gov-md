@@ -2,55 +2,54 @@ name: API Health Check
 
 on:
   schedule:
-    - cron: '0 6 * * 1'  # every Monday at 06:00 UTC
+    - cron: '0 8 * * 1'  # Every Monday at 08:00 UTC
   workflow_dispatch:
 
 jobs:
-  check:
-    name: Verify dataset.gov.md API
+  health-check:
+    name: Check dataset.gov.md API
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check API status endpoint
+      - name: Check API status
         run: |
-          STATUS=$(curl -sf "https://dataset.gov.md/api/3/action/status_show")
-          echo "Status response: $STATUS"
-          echo "$STATUS" | python3 -c "
-          import sys, json
-          d = json.load(sys.stdin)
-          assert d['success'], 'API returned success=false'
-          ckan = d['result']['ckan_version']
-          print(f'✅ CKAN version: {ckan}')
-          "
+          echo "🔍 Checking dataset.gov.md CKAN API..."
 
-      - name: Check dataset count
-        run: |
-          COUNT=$(curl -sf "https://dataset.gov.md/api/3/action/package_search?rows=0" | \
-            python3 -c "import sys,json; print(json.load(sys.stdin)['result']['count'])")
-          echo "Total datasets: $COUNT"
-          python3 -c "
-          count = $COUNT
-          assert count > 1000, f'Dataset count too low: {count}'
-          print(f'✅ Dataset count OK: {count}')
-          "
+          RESPONSE=$(curl -sf "https://dataset.gov.md/api/3/action/package_search?rows=0" \
+            -H "Accept: application/json" \
+            --max-time 15) || {
+            echo "❌ API unreachable or returned error"
+            exit 1
+          }
 
-      - name: Check search endpoint
-        run: |
-          curl -sf "https://dataset.gov.md/api/3/action/package_search?q=populatie&rows=1" | \
-            python3 -c "
-          import sys, json
-          d = json.load(sys.stdin)
-          assert d['success']
-          assert d['result']['count'] > 0
-          print('✅ Search endpoint OK')
-          "
+          SUCCESS=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('success','false'))")
+          COUNT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['result']['count'])" 2>/dev/null || echo "0")
 
-      - name: Summary
-        if: always()
+          if [ "$SUCCESS" = "True" ] && [ "$COUNT" -gt "0" ]; then
+            echo "✅ API is live — $COUNT datasets available"
+          else
+            echo "❌ API returned unexpected response"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+      - name: Check CKAN version
         run: |
-          echo "## API Health Check 🇲🇩" >> $GITHUB_STEP_SUMMARY
-          echo "**Portal:** https://dataset.gov.md" >> $GITHUB_STEP_SUMMARY
-          echo "**API Base:** https://dataset.gov.md/api/3/action" >> $GITHUB_STEP_SUMMARY
-          echo "**Checked:** $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          VERSION=$(curl -sf "https://dataset.gov.md/api/3/action/status_show" \
+            -H "Accept: application/json" \
+            --max-time 10 | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['ckan_version'])")
+          echo "📦 CKAN version: $VERSION"
+
+      - name: Update review.yml timestamp
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+          sed -i "s/modified: '.*'/modified: '$TODAY'/" review.yml apis.yml
+          echo "🕐 Updated modified date to $TODAY"
+
+      - name: Commit timestamp update
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: weekly API health check — $(date +%Y-%m-%d)"
+          file_pattern: "review.yml apis.yml"

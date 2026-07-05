@@ -1,128 +1,135 @@
-# 🇲🇩 dataset.gov.md — Portalul Datelor Deschise Moldova
+# 🇲🇩 dataset.gov.md — Portalul Datelor Deschise
+
+> Moldova's national open-data catalog — **CKAN 2.10.4** — ~1,275 government datasets
 
 [![API Health](https://github.com/ivanm696/dataset-gov-md/actions/workflows/api-health.yml/badge.svg)](https://github.com/ivanm696/dataset-gov-md/actions/workflows/api-health.yml)
-![Datasets](https://img.shields.io/badge/datasets-1275%2B-blue)
-![CKAN](https://img.shields.io/badge/CKAN-2.10.4-orange)
-![License](https://img.shields.io/badge/license-Open%20Data-green)
 
-Каталог API для национального портала открытых данных Республики Молдова.
-Работает на **CKAN 2.10.4**, ~1275 датасетов, **API ключ не нужен**.
-
-**Портал:** https://dataset.gov.md  
+**Portal:** https://dataset.gov.md  
 **API Base:** `https://dataset.gov.md/api/3/action`  
-**Документация CKAN:** https://docs.ckan.org/en/2.10/api/
+**Datasets:** ~1,275 | **No API key required** for read endpoints
 
 ---
 
-## 🚀 Быстрый старт
-
-### curl
+## Quick Start
 
 ```bash
-# Статус API
-curl "https://dataset.gov.md/api/3/action/status_show"
-
-# Количество датасетов
-curl "https://dataset.gov.md/api/3/action/package_search?rows=0"
-
-# Поиск по ключевому слову
-curl "https://dataset.gov.md/api/3/action/package_search?q=populatie&rows=5"
-
-# Список организаций
-curl "https://dataset.gov.md/api/3/action/organization_list"
-
-# Информация о конкретном датасете
-curl "https://dataset.gov.md/api/3/action/package_show?id=DATASET_ID"
+git clone https://github.com/ivanm696/dataset-gov-md.git
+cd dataset-gov-md
+python client.py
 ```
 
-### Python (без зависимостей)
+## Python Client
 
 ```python
-from src.client import MoldovaDataClient
+from client import MoldovaDataClient
 
 client = MoldovaDataClient()
 
-# Общая статистика
-print(client.count())            # → 1275
+# Total datasets
+print(client.count())  # → 1275
 
-# Поиск датасетов
-results = client.search("populatie", rows=5)
-for ds in results:
-    print(ds["title"])
+# Search by keyword
+results = client.search("agricultură", rows=10)
+client.print_results(results)
 
-# Последние обновления
-for ds in client.recent(rows=5):
-    print(ds["metadata_modified"][:10], ds["title"])
+# Search by organization
+results = client.search_by_organization("ministerul-finantelor")
+client.print_results(results)
 
-# Ресурсы для скачивания
-resources = client.resources("DATASET_ID")
-for r in resources:
-    print(r["format"], r["url"])
+# Get dataset metadata
+ds = client.get_dataset("populatia-republicii-moldova")
+print(ds["title"], ds["resources"])
 
-# Датасеты по организации
-datasets = client.org_datasets("ministerul-finantelor")
+# List organizations
+orgs = client.list_organizations()
+
+# CKAN status
+status = client.status()
+print(status["ckan_version"])  # → 2.10.4
 ```
 
----
+## API Reference
 
-## 📊 Примеры датасетов по темам
+| Method | Description |
+|---|---|
+| `search(query, rows, organization, tags)` | Search datasets |
+| `count()` | Total dataset count |
+| `get_dataset(name_or_id)` | Full dataset metadata |
+| `list_datasets()` | All dataset names |
+| `list_organizations()` | All organization names |
+| `get_organization(name)` | Organization detail |
+| `search_by_organization(org)` | Datasets by org |
+| `list_tags()` | All tags |
+| `status()` | CKAN instance info |
 
-| Тема | Ключевое слово | Примерные датасеты |
-|---|---|---|
-| 👥 Население | `populatie` | Население по районам, перепись |
-| 💰 Бюджет | `buget` | Бюджет государства, расходы |
-| 🏥 Здоровье | `sanatate` | Больницы, заболеваемость |
-| 🎓 Образование | `educatie` | Школы, университеты |
-| 🚗 Транспорт | `transport` | Дороги, автопарк |
-| 🌾 Сельское хозяйство | `agricultura` | Урожайность, площади |
-| ⚖️ Юстиция | `justitie` | Суды, преступность |
-| 🏛️ Администрация | `administratie` | Госорганы, решения |
+## Direct API Examples
 
----
+```bash
+# Total count
+curl "https://dataset.gov.md/api/3/action/package_search?rows=0"
 
-## 🛠️ Структура репозитория
+# Search datasets
+curl "https://dataset.gov.md/api/3/action/package_search?q=agricultura&rows=5"
+
+# By organization
+curl "https://dataset.gov.md/api/3/action/package_search?fq=organization:ministerul-finantelor"
+
+# Dataset detail
+curl "https://dataset.gov.md/api/3/action/package_show?id=populatia-republicii-moldova"
+
+# All organizations
+curl "https://dataset.gov.md/api/3/action/organization_list"
+
+# CKAN version
+curl "https://dataset.gov.md/api/3/action/status_show"
+```
+
+## Key Organizations
+
+| Organization | Datasets |
+|---|---|
+| Biroul Național de Statistică | ~300 |
+| Ministerul Finanțelor | ~150 |
+| Ministerul Economiei | ~80 |
+| Ministerul Agriculturii | ~60 |
+| Ministerul Sănătății | ~50 |
+
+## Examples
+
+```bash
+python examples/search_datasets.py      # keyword + org search
+python examples/download_dataset.py    # get metadata + download CSV
+python examples/list_organizations.py  # list all organizations
+```
+
+## Project Structure
 
 ```
 dataset-gov-md/
-├── src/
-│   └── client.py           # Python клиент (без зависимостей)
+├── client.py              # Python API client (zero dependencies)
+├── apis.yml               # APIs.json catalog spec
+├── review.yml             # Live API verification log
+├── requirements.txt
 ├── examples/
-│   ├── search_datasets.py  # Поиск датасетов по темам
-│   ├── list_organizations.py # Список организаций с количеством
-│   └── download_resource.py  # Нахождение и скачивание ресурсов
-├── .github/workflows/
-│   └── api-health.yml      # Еженедельная проверка API (каждый понедельник)
-├── apis.yml                # APIs.json спецификация
-├── review.yml              # Результаты верификации API
-└── README.md
+│   ├── search_datasets.py
+│   ├── download_dataset.py
+│   └── list_organizations.py
+└── .github/workflows/
+    └── api-health.yml     # Weekly health check (Mondays)
 ```
 
----
+## Notes
 
-## 📡 API Endpoints
+- **API lives on `dataset.gov.md`**, not `date.gov.md` (landing portal)
+- All `/ckan/` and `/api/3/` paths on `date.gov.md` return 404
+- Live endpoint verified: `package_search?rows=0` → count=1,275, HTTP 200
+- CKAN docs: https://docs.ckan.org/en/2.10/api/
 
-| Endpoint | Описание |
-|---|---|
-| `status_show` | Статус CKAN, версия |
-| `package_search?q=...` | Поиск датасетов |
-| `package_list` | Все ID датасетов |
-| `package_show?id=...` | Метаданные датасета |
-| `organization_list` | Все организации |
-| `organization_show?id=...` | Детали организации |
-| `group_list` | Тематические группы |
+## Maintainer
 
----
-
-## 🔗 Полезные ссылки
-
-- 🌐 [Портал dataset.gov.md](https://dataset.gov.md)
-- 📖 [Документация CKAN API](https://docs.ckan.org/en/2.10/api/)
-- 🇲🇩 [date.gov.md](https://date.gov.md) — лендинг портал
-- 📊 [CKAN Action API Reference](https://docs.ckan.org/en/2.10/api/#action-api-reference)
-
----
-
-## 👤 Maintainer
-
-**Ivan Melenciuc** · melenciucivan03@gmail.com  
+**Ivan Melenciuc** — melenciucivan03@gmail.com  
 GitHub: [@ivanm696](https://github.com/ivanm696)
+
+## License
+
+MIT
