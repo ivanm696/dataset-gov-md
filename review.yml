@@ -2,7 +2,7 @@ name: dataset.gov.md
 description: dataset.gov.md CKAN open-data API live-verification for APIs.json cataloging.
 url: https://raw.githubusercontent.com/api-evangelist/dataset-gov-md/refs/heads/main/review.yml
 created: '2026-06-23'
-modified: '2026-07-13'
+modified: '2026-07-20'
 reviews:
   - date: '2026-06-23'
     rating: 4
